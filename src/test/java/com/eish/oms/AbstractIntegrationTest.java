@@ -1,7 +1,11 @@
 package com.eish.oms;
 
+import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 
+import java.time.Duration;
+
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -29,6 +33,36 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired
     protected JdbcClient jdbc;
+
+    /**
+     * Every confirmed order eventually gets exactly one NOTIFICATION row from the asynchronous pipeline.
+     * Waiting for that here means no listener is still writing when the next test truncates the tables.
+     */
+    @AfterEach
+    void drainPipeline() {
+        await().atMost(Duration.ofSeconds(10)).until(() -> notificationRows() == paidOrders());
+    }
+
+    protected int paidOrders() {
+        return jdbc.sql("select count(*) from orders where payment_ref is not null").query(Integer.class).single();
+    }
+
+    protected int notificationRows() {
+        return jdbc.sql("select count(*) from audit_log where type = 'NOTIFICATION'").query(Integer.class).single();
+    }
+
+    protected int auditRows(String type) {
+        return jdbc.sql("select count(*) from audit_log where type = :type").param("type", type)
+                .query(Integer.class).single();
+    }
+
+    protected int orderCount() {
+        return jdbc.sql("select count(*) from orders").query(Integer.class).single();
+    }
+
+    protected int cartRows() {
+        return jdbc.sql("select count(*) from cart_item").query(Integer.class).single();
+    }
 
     protected static RequestPostProcessor asAdmin() {
         return httpBasic(DemoUsers.ADMIN_USERNAME, DemoUsers.ADMIN_PASSWORD);
