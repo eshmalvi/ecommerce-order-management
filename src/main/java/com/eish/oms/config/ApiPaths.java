@@ -19,6 +19,7 @@ public final class ApiPaths {
     public static final String ADMIN_PRODUCTS = ADMIN + "/products";
     public static final String ADMIN_WAREHOUSES = ADMIN + "/warehouses";
     public static final String ADMIN_INVENTORY = ADMIN + "/inventory";
+    public static final String ADMIN_DISCOUNTS = ADMIN + "/discounts";
 
     // Customer
     public static final String CART = API + "/cart";

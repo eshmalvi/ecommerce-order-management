@@ -80,7 +80,7 @@ One row per commit. Status is updated by the agent when the commit lands.
 | 4 | feat: Add Basic auth with three roles | done |
 | 5 | feat: Add catalog with categories and products | done |
 | 6 | feat: Add warehouses and inventory management | done |
-| 7 | feat: Add discount codes | |
+| 7 | feat: Add discount codes | done |
 | 8 | feat: Add pricing with discount and tax | |
 | 9 | feat: Add customer cart | |
 | 10 | feat: Add atomic inventory allocation | |
