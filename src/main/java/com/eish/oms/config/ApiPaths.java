@@ -23,6 +23,7 @@ public final class ApiPaths {
 
     // Customer
     public static final String CART = API + "/cart";
+    public static final String CART_ITEMS = CART + "/items";
     public static final String CHECKOUT = API + "/checkout";
     public static final String ORDERS = API + "/orders";
     public static final String ORDER_RETURN_PATTERN = ORDERS + "/*/return";

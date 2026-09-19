@@ -1,0 +1,36 @@
+package com.eish.oms.cart;
+
+import java.util.List;
+
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.stereotype.Repository;
+
+/**
+ * Data access for the {@code cart_item} table. The SQL lives in {@link CartSql}.
+ */
+@Repository
+public class CartItemRepository {
+
+    private final JdbcClient jdbc;
+
+    public CartItemRepository(JdbcClient jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    /** Adds {@code quantity} of a product to the customer's cart, creating the line or incrementing it. */
+    public void addOrIncrement(String customer, long productId, int quantity) {
+        jdbc.sql(CartSql.ADD_OR_INCREMENT)
+                .param("customer", customer)
+                .param("productId", productId)
+                .param("quantity", quantity)
+                .update();
+    }
+
+    /** The customer's cart lines with current product details, ordered by product id. */
+    public List<CartLine> findLines(String customer) {
+        return jdbc.sql(CartSql.FIND_LINES_BY_CUSTOMER)
+                .param("customer", customer)
+                .query(CartLine.class)
+                .list();
+    }
+}
