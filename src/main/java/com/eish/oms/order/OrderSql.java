@@ -22,6 +22,13 @@ final class OrderSql {
              where id = :id
             """;
 
+    /** A plain status change, used by fulfillment. */
+    static final String UPDATE_STATUS = """
+            update orders
+               set status = :status, updated_at = now()
+             where id = :id
+            """;
+
     static final String FIND_BY_ID =
             "select " + COLUMNS + " from orders where id = :id";
 

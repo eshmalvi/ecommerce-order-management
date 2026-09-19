@@ -89,7 +89,7 @@ One row per commit. Status is updated by the agent when the commit lands.
 | 11 | feat: Add payment gateway port with fake | done |
 | 12 | feat: Add order state machine | done |
 | 13 | feat: Add checkout as a single transaction | done |
-| 14 | feat: Add fulfillment status updates for staff | |
+| 14 | feat: Add fulfillment status updates for staff | done |
 | 15 | feat: Add returns with refund and restock | |
 | 16 | feat: Add async post-checkout pipeline | |
 | 17 | test: Add allocation and checkout concurrency tests | |

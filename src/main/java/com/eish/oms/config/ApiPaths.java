@@ -31,6 +31,7 @@ public final class ApiPaths {
 
     // Warehouse staff
     public static final String FULFILLMENT = API + "/fulfillment";
+    public static final String FULFILLMENT_ORDER_STATUS = FULFILLMENT + "/orders/{id}/status";
 
     private ApiPaths() {
     }

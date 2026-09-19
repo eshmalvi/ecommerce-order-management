@@ -43,6 +43,14 @@ public class OrderRepository {
                 .update();
     }
 
+    /** Changes the status of an order. Legality is the caller's responsibility (see OrderStateMachine). */
+    public void updateStatus(long orderId, OrderStatus status) {
+        jdbc.sql(OrderSql.UPDATE_STATUS)
+                .param("id", orderId)
+                .param("status", status.name())
+                .update();
+    }
+
     public Optional<Order> findById(long id) {
         return jdbc.sql(OrderSql.FIND_BY_ID)
                 .param("id", id)
