@@ -5,6 +5,10 @@ spring:
     # "local" starts an embedded PostgreSQL inside the JVM. Use "postgres" to point at an external database.
     active: local
 
+app:
+  # Flat tax rate applied to the post-discount subtotal (0.10 = 10%).
+  tax-rate: 0.10
+
 logging:
   level:
     com.eish.oms: INFO
