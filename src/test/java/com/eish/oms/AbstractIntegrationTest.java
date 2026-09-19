@@ -54,6 +54,17 @@ public abstract class AbstractIntegrationTest {
         return jdbc.sql("select id from warehouse where name = :name").param("name", name).query(Long.class).single();
     }
 
+    protected int totalStock(String sku) {
+        return jdbc.sql("""
+                select coalesce(sum(i.quantity), 0) from inventory i
+                join product p on p.id = i.product_id
+                where p.sku = :sku
+                """)
+                .param("sku", sku)
+                .query(Integer.class)
+                .single();
+    }
+
     protected int stock(String sku, String warehouse) {
         return jdbc.sql("""
                 select i.quantity from inventory i

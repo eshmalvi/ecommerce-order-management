@@ -24,6 +24,28 @@ final class InventorySql {
     static final String FIND_BY_PRODUCT_AND_WAREHOUSE =
             "select " + COLUMNS + " from inventory where product_id = :productId and warehouse_id = :warehouseId";
 
+    /** Warehouses that currently hold at least the wanted quantity, fullest first. */
+    static final String WAREHOUSES_WITH_STOCK = """
+            select warehouse_id
+              from inventory
+             where product_id = :productId and quantity >= :quantity
+             order by quantity desc, warehouse_id
+            """;
+
+    /**
+     * The statement that prevents overselling. The availability check and the decrement are one statement,
+     * so no other transaction can slip in between them. PostgreSQL re-evaluates the WHERE clause after
+     * acquiring the row lock, so under the default READ COMMITTED isolation the update affects exactly
+     * one row when there is enough stock and zero rows when there is not. Callers branch on that count.
+     */
+    static final String TRY_DECREMENT = """
+            update inventory
+               set quantity = quantity - :quantity
+             where product_id = :productId
+               and warehouse_id = :warehouseId
+               and quantity >= :quantity
+            """;
+
     private InventorySql() {
     }
 }

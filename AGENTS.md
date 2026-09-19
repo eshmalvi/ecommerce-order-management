@@ -30,7 +30,9 @@ The full plan is in `docs/plan.md`; the assignment text is in `docs/brief.md`.
 - Stock decrement is one atomic conditional `UPDATE ... WHERE quantity >= :q`. Never read-check-write.
   Never `FOR UPDATE SKIP LOCKED` for inventory.
 - Post-checkout work uses `@Async @TransactionalEventListener(AFTER_COMMIT)` on a bounded executor.
-- Every commit compiles and passes `./mvnw -q verify`. Every feature commit includes its tests.
+- Every commit compiles and passes `./mvnw -q verify`. Commits 2 to 9 shipped their tests alongside the
+  code; from commit 10 the human chose to finish the feature code first and add the remaining tests in
+  dedicated `test:` commits afterwards. The existing suite still runs on every commit.
 - Never run `git push`. Commit locally; the human pushes.
 
 ## Conventions
@@ -83,16 +85,18 @@ One row per commit. Status is updated by the agent when the commit lands.
 | 7 | feat: Add discount codes | done |
 | 8 | feat: Add pricing with discount and tax | done |
 | 9 | feat: Add customer cart | done |
-| 10 | feat: Add atomic inventory allocation | |
+| 10 | feat: Add atomic inventory allocation | done |
 | 11 | feat: Add payment gateway port with fake | |
 | 12 | feat: Add order state machine | |
 | 13 | feat: Add checkout as a single transaction | |
-| 14 | test: Add demo showing naive inventory oversells | |
-| 15 | feat: Add fulfillment status updates for staff | |
-| 16 | feat: Add returns with refund and restock | |
-| 17 | feat: Add async post-checkout pipeline | |
-| 18 | docs: Add README with design decisions | |
-| 19 | docs: Add raw artifacts and skills note | |
+| 14 | feat: Add fulfillment status updates for staff | |
+| 15 | feat: Add returns with refund and restock | |
+| 16 | feat: Add async post-checkout pipeline | |
+| 17 | test: Add allocation and checkout concurrency tests | |
+| 18 | test: Add lifecycle, return and pipeline tests | |
+| 19 | test: Add demo showing naive inventory oversells | |
+| 20 | docs: Add README with design decisions | |
+| 21 | docs: Add raw artifacts and skills note | |
 
 ## Notes and gotchas
 

@@ -31,6 +31,31 @@ public class InventoryRepository {
                 .single();
     }
 
+    /** Ids of the warehouses that currently hold at least {@code quantity} of the product, fullest first. */
+    public List<Long> findWarehousesWithStock(long productId, int quantity) {
+        return jdbc.sql(InventorySql.WAREHOUSES_WITH_STOCK)
+                .param("productId", productId)
+                .param("quantity", quantity)
+                .query(Long.class)
+                .list();
+    }
+
+    /**
+     * Atomically takes {@code quantity} units from one warehouse if, and only if, it has that many.
+     * Check and decrement are a single UPDATE (see {@link InventorySql#TRY_DECREMENT}), so concurrent
+     * buyers can never both succeed on the same last unit.
+     *
+     * @return true if the stock was taken; false if the warehouse did not have enough at that instant
+     */
+    public boolean tryDecrement(long productId, long warehouseId, int quantity) {
+        int updatedRows = jdbc.sql(InventorySql.TRY_DECREMENT)
+                .param("productId", productId)
+                .param("warehouseId", warehouseId)
+                .param("quantity", quantity)
+                .update();
+        return updatedRows == 1;
+    }
+
     public List<Inventory> findAll() {
         return jdbc.sql(InventorySql.FIND_ALL).query(Inventory.class).list();
     }
