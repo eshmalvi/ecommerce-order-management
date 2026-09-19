@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: ecommerce-order-management
+  profiles:
+    # "local" starts an embedded PostgreSQL inside the JVM. Use "postgres" to point at an external database.
+    active: local
+
+logging:
+  level:
+    com.eish.oms: INFO

@@ -1,0 +1,7 @@
+# Run against an external PostgreSQL instead of the embedded one:
+#   SPRING_PROFILES_ACTIVE=postgres DB_URL=jdbc:postgresql://localhost:5432/oms DB_USER=oms DB_PASSWORD=secret ./mvnw spring-boot:run
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
