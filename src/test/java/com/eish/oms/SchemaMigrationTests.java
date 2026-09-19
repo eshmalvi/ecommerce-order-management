@@ -15,6 +15,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 @SpringBootTest
 class SchemaMigrationTests {
 
+    private static final int MIGRATION_COUNT = 2;
+
     @Autowired
     private JdbcClient jdbc;
 
@@ -23,23 +25,25 @@ class SchemaMigrationTests {
         Integer applied = jdbc.sql("select count(*) from flyway_schema_history where success")
                 .query(Integer.class).single();
 
-        assertThat(applied).isEqualTo(2);
+        assertThat(applied).isEqualTo(MIGRATION_COUNT);
     }
 
     @Test
     void seedsDemoData() {
-        assertThat(count("category")).isEqualTo(2);
-        assertThat(count("product")).isEqualTo(3);
-        assertThat(count("warehouse")).isEqualTo(2);
-        assertThat(count("inventory")).isEqualTo(5);
-        assertThat(count("discount")).isEqualTo(1);
+        assertThat(count("category")).isEqualTo(SeedData.CATEGORY_COUNT);
+        assertThat(count("product")).isEqualTo(SeedData.PRODUCT_COUNT);
+        assertThat(count("warehouse")).isEqualTo(SeedData.WAREHOUSE_COUNT);
+        assertThat(count("inventory")).isEqualTo(SeedData.INVENTORY_ROW_COUNT);
+        assertThat(count("discount")).isEqualTo(SeedData.DISCOUNT_COUNT);
 
         Integer headphoneStock = jdbc.sql("""
                 select sum(i.quantity) from inventory i
                 join product p on p.id = i.product_id
-                where p.sku = 'SKU-HEADPHONES'
-                """).query(Integer.class).single();
-        assertThat(headphoneStock).isEqualTo(10);
+                where p.sku = :sku
+                """)
+                .param("sku", SeedData.SKU_HEADPHONES)
+                .query(Integer.class).single();
+        assertThat(headphoneStock).isEqualTo(SeedData.HEADPHONES_TOTAL);
     }
 
     @Test

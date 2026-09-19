@@ -38,7 +38,14 @@ The full plan is in `docs/plan.md`; the assignment text is in `docs/brief.md`.
 - Package by feature: `catalog`, `inventory`, `discount`, `cart`, `pricing`, `payment`, `order`,
   `pipeline`, plus `config` and `common`.
 - Controllers translate HTTP to service calls and back, nothing else. Services own use cases and
-  transaction boundaries. Repositories own SQL, one class per table.
+  transaction boundaries. Repositories own data access, one class per table.
+- No magic strings. Anything the system depends on as an identifier is a named constant: SQL statements
+  in a package-private `XxxSql` class next to each repository (`ProductSql.FIND_BY_ID`); URL paths in
+  `config/ApiPaths` (used by both controllers and `SecurityConfig`, so they cannot drift); roles in
+  `config/Roles`; profile names in `config/Profiles`; demo credentials in `config/DemoUsers`; seed
+  identifiers for tests in `SeedData`. What stays inline: one-off human-readable message text, SQL parameter
+  names (they belong to the statement that declares them), validation annotation values, and test inputs
+  such as request JSON.
 - One `@RestControllerAdvice` returns RFC 7807 `ProblemDetail` for every error. Status codes:
   400 validation, 401 no credentials, 402 payment declined, 403 wrong role, 404 not found or not yours,
   409 conflict with current state (duplicate, insufficient stock, illegal transition, empty cart).
@@ -96,3 +103,6 @@ One row per commit. Status is updated by the agent when the commit lands.
   Windows binaries ship with `embedded-postgres` itself.
 - The human stopped the agent once for writing an entire task's worth of code before the first commit;
   the work was re-planned into the small commits listed above.
+- Review of commit 5 asked for SQL and shared literals to move into constants classes, then for a
+  sweep of the whole codebase (embedded database credentials, profile names, URL paths, seed data in
+  tests). Done as one `refactor` commit so the review is visible in the history.

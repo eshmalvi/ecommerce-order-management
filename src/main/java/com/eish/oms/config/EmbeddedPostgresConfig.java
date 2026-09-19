@@ -16,8 +16,14 @@ import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
  * Active only under the "local" profile; the "postgres" profile points at an external database instead.
  */
 @Configuration
-@Profile("local")
+@Profile(Profiles.LOCAL)
 public class EmbeddedPostgresConfig {
+
+    /** The superuser and default database that every embedded PostgreSQL starts with. */
+    private static final String EMBEDDED_USER = "postgres";
+    private static final String EMBEDDED_DATABASE = "postgres";
+    /** Embedded PostgreSQL trusts local connections; the password is required by the pool but not checked. */
+    private static final String EMBEDDED_PASSWORD = "postgres";
 
     /**
      * Boots an embedded PostgreSQL on a random free port. Its data directory is temporary,
@@ -34,9 +40,9 @@ public class EmbeddedPostgresConfig {
     @Bean
     public DataSource dataSource(EmbeddedPostgres embeddedPostgres) {
         return DataSourceBuilder.create()
-                .url(embeddedPostgres.getJdbcUrl("postgres", "postgres"))
-                .username("postgres")
-                .password("postgres")
+                .url(embeddedPostgres.getJdbcUrl(EMBEDDED_USER, EMBEDDED_DATABASE))
+                .username(EMBEDDED_USER)
+                .password(EMBEDDED_PASSWORD)
                 .build();
     }
 }

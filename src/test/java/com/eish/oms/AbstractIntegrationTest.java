@@ -10,6 +10,8 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
+import com.eish.oms.config.DemoUsers;
+
 /**
  * Base for integration tests: full application context on the embedded PostgreSQL, MockMvc for HTTP,
  * and the database reset to the seed data before every test method.
@@ -29,15 +31,15 @@ public abstract class AbstractIntegrationTest {
     protected JdbcClient jdbc;
 
     protected static RequestPostProcessor asAdmin() {
-        return httpBasic("admin", "admin123");
+        return httpBasic(DemoUsers.ADMIN_USERNAME, DemoUsers.ADMIN_PASSWORD);
     }
 
     protected static RequestPostProcessor asCustomer() {
-        return httpBasic("customer", "customer123");
+        return httpBasic(DemoUsers.CUSTOMER_USERNAME, DemoUsers.CUSTOMER_PASSWORD);
     }
 
     protected static RequestPostProcessor asStaff() {
-        return httpBasic("staff", "staff123");
+        return httpBasic(DemoUsers.STAFF_USERNAME, DemoUsers.STAFF_PASSWORD);
     }
 
     protected long productId(String sku) {

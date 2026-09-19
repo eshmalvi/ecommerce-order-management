@@ -23,6 +23,9 @@ public class ApiExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
+    /** Name of the extra property carrying field-level validation messages on a 400 response. */
+    public static final String ERRORS_PROPERTY = "errors";
+
     /** Bean Validation failed on a request body: 400 with a field-to-message map. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleInvalidBody(MethodArgumentNotValidException ex) {
@@ -31,7 +34,7 @@ public class ApiExceptionHandler {
                 .forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
-        problem.setProperty("errors", errors);
+        problem.setProperty(ERRORS_PROPERTY, errors);
         return problem;
     }
 

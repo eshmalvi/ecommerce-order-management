@@ -7,7 +7,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /**
- * SQL for the {@code category} table.
+ * Data access for the {@code category} table. The SQL lives in {@link CategorySql}.
  */
 @Repository
 public class CategoryRepository {
@@ -20,7 +20,7 @@ public class CategoryRepository {
 
     /** Inserts a category and returns it with its generated id. Duplicate names fail on the unique constraint. */
     public Category insert(String name) {
-        Long id = jdbc.sql("insert into category (name) values (:name) returning id")
+        Long id = jdbc.sql(CategorySql.INSERT)
                 .param("name", name)
                 .query(Long.class)
                 .single();
@@ -28,13 +28,11 @@ public class CategoryRepository {
     }
 
     public List<Category> findAll() {
-        return jdbc.sql("select id, name from category order by name")
-                .query(Category.class)
-                .list();
+        return jdbc.sql(CategorySql.FIND_ALL).query(Category.class).list();
     }
 
     public Optional<Category> findById(long id) {
-        return jdbc.sql("select id, name from category where id = :id")
+        return jdbc.sql(CategorySql.FIND_BY_ID)
                 .param("id", id)
                 .query(Category.class)
                 .optional();

@@ -1,5 +1,7 @@
 package com.eish.oms.config;
 
+import static com.eish.oms.config.ApiPaths.andBelow;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,10 +25,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    public static final String ROLE_ADMIN = "ADMIN";
-    public static final String ROLE_CUSTOMER = "CUSTOMER";
-    public static final String ROLE_STAFF = "STAFF";
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -34,12 +32,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/products/**", "/api/categories/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole(ROLE_ADMIN)
-                        .requestMatchers("/api/fulfillment/**").hasRole(ROLE_STAFF)
-                        .requestMatchers("/api/cart/**", "/api/checkout").hasRole(ROLE_CUSTOMER)
-                        .requestMatchers(HttpMethod.POST, "/api/orders/*/return").hasRole(ROLE_CUSTOMER)
-                        .requestMatchers("/api/orders/**").hasAnyRole(ROLE_CUSTOMER, ROLE_STAFF, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.GET, andBelow(ApiPaths.PRODUCTS), andBelow(ApiPaths.CATEGORIES)).permitAll()
+                        .requestMatchers(andBelow(ApiPaths.ADMIN)).hasRole(Roles.ADMIN)
+                        .requestMatchers(andBelow(ApiPaths.FULFILLMENT)).hasRole(Roles.STAFF)
+                        .requestMatchers(andBelow(ApiPaths.CART), ApiPaths.CHECKOUT).hasRole(Roles.CUSTOMER)
+                        .requestMatchers(HttpMethod.POST, ApiPaths.ORDER_RETURN_PATTERN).hasRole(Roles.CUSTOMER)
+                        .requestMatchers(andBelow(ApiPaths.ORDERS)).hasAnyRole(Roles.CUSTOMER, Roles.STAFF, Roles.ADMIN)
                         .anyRequest().denyAll())
                 .httpBasic(Customizer.withDefaults());
         return http.build();
@@ -50,15 +48,21 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Demo users. A real deployment would replace this with a user store or an identity provider;
-     * the path rules above would not change.
-     */
+    /** The demo users from {@link DemoUsers}, with BCrypt-hashed passwords. */
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         return new InMemoryUserDetailsManager(
-                User.withUsername("admin").password(passwordEncoder.encode("admin123")).roles(ROLE_ADMIN).build(),
-                User.withUsername("customer").password(passwordEncoder.encode("customer123")).roles(ROLE_CUSTOMER).build(),
-                User.withUsername("staff").password(passwordEncoder.encode("staff123")).roles(ROLE_STAFF).build());
+                User.withUsername(DemoUsers.ADMIN_USERNAME)
+                        .password(passwordEncoder.encode(DemoUsers.ADMIN_PASSWORD))
+                        .roles(Roles.ADMIN)
+                        .build(),
+                User.withUsername(DemoUsers.CUSTOMER_USERNAME)
+                        .password(passwordEncoder.encode(DemoUsers.CUSTOMER_PASSWORD))
+                        .roles(Roles.CUSTOMER)
+                        .build(),
+                User.withUsername(DemoUsers.STAFF_USERNAME)
+                        .password(passwordEncoder.encode(DemoUsers.STAFF_PASSWORD))
+                        .roles(Roles.STAFF)
+                        .build());
     }
 }
