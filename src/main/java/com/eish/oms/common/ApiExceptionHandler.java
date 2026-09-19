@@ -26,6 +26,9 @@ public class ApiExceptionHandler {
     /** Name of the extra property carrying field-level validation messages on a 400 response. */
     public static final String ERRORS_PROPERTY = "errors";
 
+    /** Name of the extra property listing the legal status changes on an illegal-transition 409. */
+    public static final String ALLOWED_TRANSITIONS_PROPERTY = "allowedTransitions";
+
     /** Bean Validation failed on a request body: 400 with a field-to-message map. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleInvalidBody(MethodArgumentNotValidException ex) {
@@ -60,6 +63,14 @@ public class ApiExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     public ProblemDetail handleBusinessRule(BusinessRuleException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /** An illegal status change: 409, plus the moves that would have been legal. */
+    @ExceptionHandler(IllegalTransitionException.class)
+    public ProblemDetail handleIllegalTransition(IllegalTransitionException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setProperty(ALLOWED_TRANSITIONS_PROPERTY, ex.getAllowedTransitions());
+        return problem;
     }
 
     /** The payment provider refused the charge. 402 is the honest status for exactly this case. */

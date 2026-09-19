@@ -87,7 +87,7 @@ One row per commit. Status is updated by the agent when the commit lands.
 | 9 | feat: Add customer cart | done |
 | 10 | feat: Add atomic inventory allocation | done |
 | 11 | feat: Add payment gateway port with fake | done |
-| 12 | feat: Add order state machine | |
+| 12 | feat: Add order state machine | done |
 | 13 | feat: Add checkout as a single transaction | |
 | 14 | feat: Add fulfillment status updates for staff | |
 | 15 | feat: Add returns with refund and restock | |
