@@ -27,6 +27,8 @@ public final class ApiPaths {
     public static final String CHECKOUT = API + "/checkout";
     public static final String ORDERS = API + "/orders";
     public static final String ORDER_BY_ID = ORDERS + "/{id}";
+    public static final String ORDER_RETURN = ORDER_BY_ID + "/return";
+    /** Security-rule form of {@link #ORDER_RETURN}: any order id. */
     public static final String ORDER_RETURN_PATTERN = ORDERS + "/*/return";
 
     // Warehouse staff

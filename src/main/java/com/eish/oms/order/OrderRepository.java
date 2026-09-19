@@ -43,6 +43,15 @@ public class OrderRepository {
                 .update();
     }
 
+    /** Records a refund and moves the order to {@code status}. */
+    public void markReturned(long orderId, OrderStatus status, String refundRef) {
+        jdbc.sql(OrderSql.MARK_RETURNED)
+                .param("id", orderId)
+                .param("status", status.name())
+                .param("refundRef", refundRef)
+                .update();
+    }
+
     /** Changes the status of an order. Legality is the caller's responsibility (see OrderStateMachine). */
     public void updateStatus(long orderId, OrderStatus status) {
         jdbc.sql(OrderSql.UPDATE_STATUS)

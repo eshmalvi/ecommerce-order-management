@@ -46,6 +46,14 @@ final class InventorySql {
                and quantity >= :quantity
             """;
 
+    /** Puts returned units back where they came from. */
+    static final String RESTOCK = """
+            update inventory
+               set quantity = quantity + :quantity
+             where product_id = :productId
+               and warehouse_id = :warehouseId
+            """;
+
     private InventorySql() {
     }
 }

@@ -22,6 +22,13 @@ final class OrderSql {
              where id = :id
             """;
 
+    /** The order came back and the money went back: record the refund reference with the new status. */
+    static final String MARK_RETURNED = """
+            update orders
+               set status = :status, refund_ref = :refundRef, updated_at = now()
+             where id = :id
+            """;
+
     /** A plain status change, used by fulfillment. */
     static final String UPDATE_STATUS = """
             update orders

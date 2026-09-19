@@ -56,6 +56,15 @@ public class InventoryRepository {
         return updatedRows == 1;
     }
 
+    /** Adds {@code quantity} units back to the warehouse they were taken from. */
+    public void restock(long productId, long warehouseId, int quantity) {
+        jdbc.sql(InventorySql.RESTOCK)
+                .param("productId", productId)
+                .param("warehouseId", warehouseId)
+                .param("quantity", quantity)
+                .update();
+    }
+
     public List<Inventory> findAll() {
         return jdbc.sql(InventorySql.FIND_ALL).query(Inventory.class).list();
     }

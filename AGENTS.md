@@ -90,7 +90,7 @@ One row per commit. Status is updated by the agent when the commit lands.
 | 12 | feat: Add order state machine | done |
 | 13 | feat: Add checkout as a single transaction | done |
 | 14 | feat: Add fulfillment status updates for staff | done |
-| 15 | feat: Add returns with refund and restock | |
+| 15 | feat: Add returns with refund and restock | done |
 | 16 | feat: Add async post-checkout pipeline | |
 | 17 | test: Add allocation and checkout concurrency tests | |
 | 18 | test: Add lifecycle, return and pipeline tests | |
@@ -110,3 +110,7 @@ One row per commit. Status is updated by the agent when the commit lands.
 - Review of commit 5 asked for SQL and shared literals to move into constants classes, then for a
   sweep of the whole codebase (embedded database credentials, profile names, URL paths, seed data in
   tests). Done as one `refactor` commit so the review is visible in the history.
+- Rare flake: embedded PostgreSQL picks a random port, and once another process grabbed it in the same
+  instant ("could not bind IPv4 address 127.0.0.1"), so the readiness probe timed out and the whole
+  test context failed. Re-running the build fixed it. If it recurs often, pin a port in
+  `EmbeddedPostgresConfig` via `EmbeddedPostgres.builder().setPort(...)`.
