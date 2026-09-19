@@ -5,6 +5,16 @@ spring:
     # "local" starts an embedded PostgreSQL inside the JVM. Use "postgres" to point at an external database.
     active: local
 
+  task:
+    execution:
+      # Bounded pool for the post-checkout pipeline. When the queue is full the caller runs the task itself
+      # (see AsyncConfig): backpressure instead of unbounded memory growth.
+      thread-name-prefix: pipeline-
+      pool:
+        core-size: 4
+        max-size: 8
+        queue-capacity: 100
+
 app:
   # Flat tax rate applied to the post-discount subtotal (0.10 = 10%).
   tax-rate: 0.10

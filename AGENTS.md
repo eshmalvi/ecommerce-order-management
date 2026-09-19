@@ -91,7 +91,7 @@ One row per commit. Status is updated by the agent when the commit lands.
 | 13 | feat: Add checkout as a single transaction | done |
 | 14 | feat: Add fulfillment status updates for staff | done |
 | 15 | feat: Add returns with refund and restock | done |
-| 16 | feat: Add async post-checkout pipeline | |
+| 16 | feat: Add async post-checkout pipeline | done |
 | 17 | test: Add allocation and checkout concurrency tests | |
 | 18 | test: Add lifecycle, return and pipeline tests | |
 | 19 | test: Add demo showing naive inventory oversells | |
