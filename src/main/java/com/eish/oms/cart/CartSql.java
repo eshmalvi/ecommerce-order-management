@@ -15,6 +15,9 @@ final class CartSql {
             on conflict (customer, product_id) do update set quantity = cart_item.quantity + excluded.quantity
             """;
 
+    /** Empties a customer's cart, used once the cart has become an order. */
+    static final String DELETE_BY_CUSTOMER = "delete from cart_item where customer = :customer";
+
     /** A customer's cart joined with the current product details, ready for pricing. */
     static final String FIND_LINES_BY_CUSTOMER = """
             select p.id as product_id, p.sku, p.name as product_name, p.price as unit_price, c.quantity

@@ -26,6 +26,13 @@ public class CartItemRepository {
                 .update();
     }
 
+    /** Removes every line from the customer's cart. */
+    public void clear(String customer) {
+        jdbc.sql(CartSql.DELETE_BY_CUSTOMER)
+                .param("customer", customer)
+                .update();
+    }
+
     /** The customer's cart lines with current product details, ordered by product id. */
     public List<CartLine> findLines(String customer) {
         return jdbc.sql(CartSql.FIND_LINES_BY_CUSTOMER)
