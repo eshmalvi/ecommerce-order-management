@@ -62,6 +62,12 @@ public class ApiExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    /** The payment provider refused the charge. 402 is the honest status for exactly this case. */
+    @ExceptionHandler(PaymentDeclinedException.class)
+    public ProblemDetail handlePaymentDeclined(PaymentDeclinedException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.PAYMENT_REQUIRED, ex.getMessage());
+    }
+
     /** A unique constraint fired in the database, for example a duplicate SKU. */
     @ExceptionHandler(DuplicateKeyException.class)
     public ProblemDetail handleDuplicate(DuplicateKeyException ex) {
