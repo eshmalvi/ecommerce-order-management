@@ -25,7 +25,6 @@ import com.eish.oms.common.InsufficientStockException;
 class CheckoutConcurrencyTest extends AbstractIntegrationTest {
 
     private static final int CUSTOMERS = 50;
-    private static final String APPROVED_CARD = "4242424242424242";
 
     @Autowired
     private CheckoutService checkoutService;

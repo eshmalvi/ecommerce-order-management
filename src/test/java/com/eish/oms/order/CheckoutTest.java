@@ -30,9 +30,6 @@ import com.eish.oms.config.DemoUsers;
  */
 class CheckoutTest extends AbstractIntegrationTest {
 
-    private static final String APPROVED_CARD = "4242424242424242";
-    private static final String DECLINED_CARD = "4000000000000002";
-
     @Autowired
     private CartItemRepository cartItems;
 

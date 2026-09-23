@@ -15,10 +15,14 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
+import com.eish.oms.cart.CartItemRepository;
 import com.eish.oms.common.Db;
 import com.eish.oms.common.Params;
 import com.eish.oms.config.DemoUsers;
 import com.eish.oms.order.AuditType;
+import com.eish.oms.order.CheckoutRequest;
+import com.eish.oms.order.CheckoutService;
+import com.eish.oms.order.OrderResponse;
 
 /**
  * Base for integration tests: full application context on the embedded PostgreSQL, MockMvc for HTTP,
@@ -37,11 +41,21 @@ public abstract class AbstractIntegrationTest {
 
     private static final String WAREHOUSE_PARAM = "warehouse";
 
+    /** Test card numbers understood by the fake payment gateway. */
+    protected static final String APPROVED_CARD = "4242424242424242";
+    protected static final String DECLINED_CARD = "4000000000000002";
+
     @Autowired
     protected MockMvc mockMvc;
 
     @Autowired
     protected JdbcClient jdbc;
+
+    @Autowired
+    private CartItemRepository cartItemsForSetup;
+
+    @Autowired
+    private CheckoutService checkoutForSetup;
 
     /**
      * Every confirmed order eventually gets exactly one NOTIFICATION row from the asynchronous pipeline.
@@ -50,6 +64,17 @@ public abstract class AbstractIntegrationTest {
     @AfterEach
     void drainPipeline() {
         await().atMost(Duration.ofSeconds(10)).until(() -> notificationRows() == paidOrders());
+    }
+
+    // ---- test data setup ----
+
+    /**
+     * Places and pays for an order of {@code quantity} units of one product for the demo customer, through
+     * the real checkout service. Used by tests that start after checkout (fulfillment, returns, pipeline).
+     */
+    protected OrderResponse placeOrder(String sku, int quantity) {
+        cartItemsForSetup.addOrIncrement(DemoUsers.CUSTOMER_USERNAME, productId(sku), quantity);
+        return checkoutForSetup.checkout(DemoUsers.CUSTOMER_USERNAME, new CheckoutRequest(APPROVED_CARD, null));
     }
 
     // ---- credentials ----
