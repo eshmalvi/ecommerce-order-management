@@ -14,7 +14,7 @@ customer and warehouse staff. The three requirements that matter most and must b
 2. Checkout atomically reflects cart, inventory and payment state.
 3. Fulfillment routing, customer notification and audit logging run after checkout without blocking it.
 
-The full plan is in `docs/plan.md`; the assignment text is in `docs/brief.md`.
+The design, API, assumptions and run instructions are in `README.md`.
 
 ## Hard constraints
 

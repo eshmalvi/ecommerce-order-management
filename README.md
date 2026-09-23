@@ -93,9 +93,10 @@ Package by feature: `catalog`, `inventory`, `discount`, `cart`, `pricing`, `paym
 plus `config` and `common`. Controllers translate HTTP; services own use cases and transactions;
 repositories own SQL.
 
-The full design, requirements, assumptions, component walkthrough and the list of deliberate
-scoping cuts are in [`docs/plan.md`](docs/plan.md). The assignment as received is in
-[`docs/brief.md`](docs/brief.md).
+Deliberately out of scope, each a documented cut rather than an omission: idempotency key on checkout
+(a unique column plus catch-and-return), stock reservation with expiry for a networked payment provider,
+a transactional outbox for the pipeline events, split shipments across warehouses, partial returns,
+pagination, admin update and delete, warehouse-scoped staff.
 
 ### Class diagram
 
@@ -268,12 +269,10 @@ conditional updates for stock), the conventions, the commit plan with its status
 went wrong along the way. The human reviewed every commit and performed every push.
 
 **Skills used:** none. No custom agent skills or skill files were used; the agent's behaviour was steered
-entirely by `AGENTS.md` and the plan in `docs/plan.md`.
+entirely by `AGENTS.md`.
 
-**Raw files used during development**, all under `docs/`:
+**Raw files used during development:**
 
-- `docs/brief.md`: the assignment text as received
-- `docs/plan.md`: the implementation plan agreed before coding, including requirements, assumptions,
-  component design and the commit plan
+- `AGENTS.md`: the agent's instructions, constraints, commit plan and progress notes, as evolved during the work
 - `docs/postman/ecommerce-order-management.postman_collection.json`: the request collection used to
   exercise every endpoint by hand
