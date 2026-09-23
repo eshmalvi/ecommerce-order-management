@@ -19,8 +19,10 @@
 		<!-- Real PostgreSQL binaries that run inside the JVM, so nothing needs installing. -->
 		<embedded-postgres.version>2.2.2</embedded-postgres.version>
 		<embedded-postgres-binaries.version>17.11.0</embedded-postgres-binaries.version>
-		<!-- Tests tagged "demo" show bugs on purpose; they are excluded from the normal build. -->
+		<!-- Tests tagged "demo" show bugs on purpose; they are excluded from the normal build
+		     and run alone with ./mvnw test -Pdemo (see the demo profile below). -->
 		<test.excludedGroups>demo</test.excludedGroups>
+		<test.groups></test.groups>
 	</properties>
 
 	<dependencyManagement>
@@ -117,6 +119,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<excludedGroups>${test.excludedGroups}</excludedGroups>
+					<groups>${test.groups}</groups>
 				</configuration>
 			</plugin>
 		</plugins>
@@ -127,8 +130,9 @@
 		<profile>
 			<id>demo</id>
 			<properties>
+				<!-- Run only the tagged demo tests, and nothing else. -->
 				<test.excludedGroups>none</test.excludedGroups>
-				<test>*DemoTest</test>
+				<test.groups>demo</test.groups>
 			</properties>
 		</profile>
 	</profiles>

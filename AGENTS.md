@@ -72,7 +72,7 @@ The full plan is in `docs/plan.md`; the assignment text is in `docs/brief.md`.
 export JAVA_HOME=$(/usr/libexec/java_home -v 21)   # macOS; any JDK 21 works
 ./mvnw spring-boot:run          # starts embedded PostgreSQL, migrates, seeds, listens on :8080
 ./mvnw -q verify                # full test suite
-./mvnw test -Pdemo              # the tagged demo tests that show concurrency bugs
+./mvnw test -Pdemo              # only the tagged demo: four stock-taking strategies raced, one oversells
 ```
 
 Users: `admin/admin123`, `customer/customer123`, `staff/staff123` (HTTP Basic).
@@ -101,7 +101,7 @@ One row per commit. Status is updated by the agent when the commit lands.
 | 16 | feat: Add async post-checkout pipeline | done |
 | 17 | test: Add allocation and checkout concurrency tests | done |
 | 18 | test: Add lifecycle, return and pipeline tests | done |
-| 19 | test: Add demo showing naive inventory oversells | |
+| 19 | test: Add concurrency strategy comparison demo | done |
 | 20 | docs: Add README and raw artifacts (README with skills and raw-files sections, prompts export) | |
 
 ## Notes and gotchas
