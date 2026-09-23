@@ -102,7 +102,7 @@ One row per commit. Status is updated by the agent when the commit lands.
 | 17 | test: Add allocation and checkout concurrency tests | done |
 | 18 | test: Add lifecycle, return and pipeline tests | done |
 | 19 | test: Add concurrency strategy comparison demo | done |
-| 20 | docs: Add README and raw artifacts (README with skills and raw-files sections, prompts export) | |
+| 20 | docs: Add README | done |
 
 ## Notes and gotchas
 
