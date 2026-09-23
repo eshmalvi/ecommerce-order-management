@@ -1,7 +1,16 @@
 package com.eish.oms.cart;
 
+import static com.eish.oms.common.Db.CartItem.CUSTOMER;
+import static com.eish.oms.common.Db.CartItem.PRODUCT_ID;
+import static com.eish.oms.common.Db.CartItem.QUANTITY;
+import static com.eish.oms.common.Db.CartItem.TABLE;
+import static com.eish.oms.common.Params.bind;
+
+import com.eish.oms.common.Db;
+import com.eish.oms.common.Params;
+
 /**
- * SQL statements for the {@code cart_item} table.
+ * SQL statements for the {@code cart_item} table. Names come from {@code Db}; the grammar stays literal.
  */
 final class CartSql {
 
@@ -10,22 +19,33 @@ final class CartSql {
      * concurrent adds for the same product cannot lose an increment.
      */
     static final String ADD_OR_INCREMENT = """
-            insert into cart_item (customer, product_id, quantity)
-            values (:customer, :productId, :quantity)
-            on conflict (customer, product_id) do update set quantity = cart_item.quantity + excluded.quantity
-            """;
+            insert into %s (%s, %s, %s)
+            values (%s, %s, %s)
+            on conflict (%s, %s) do update set %s = %s.%s + excluded.%s
+            """.formatted(TABLE, CUSTOMER, PRODUCT_ID, QUANTITY,
+                    bind(Params.CUSTOMER), bind(Params.PRODUCT_ID), bind(Params.QUANTITY),
+                    CUSTOMER, PRODUCT_ID, QUANTITY, TABLE, QUANTITY, QUANTITY);
 
     /** Empties a customer's cart, used once the cart has become an order. */
-    static final String DELETE_BY_CUSTOMER = "delete from cart_item where customer = :customer";
+    static final String DELETE_BY_CUSTOMER = "delete from %s where %s = %s"
+            .formatted(TABLE, CUSTOMER, bind(Params.CUSTOMER));
 
-    /** A customer's cart joined with the current product details, ready for pricing. */
+    /**
+     * A customer's cart joined with the current product details, ready for pricing. Column aliases match
+     * the {@link CartLine} record components. Ordered by product id so every checkout locks inventory rows
+     * in the same order.
+     */
     static final String FIND_LINES_BY_CUSTOMER = """
-            select p.id as product_id, p.sku, p.name as product_name, p.price as unit_price, c.quantity
-              from cart_item c
-              join product p on p.id = c.product_id
-             where c.customer = :customer
-             order by p.id
-            """;
+            select p.%s as product_id, p.%s as sku, p.%s as product_name, p.%s as unit_price, c.%s as quantity
+              from %s c
+              join %s p on p.%s = c.%s
+             where c.%s = %s
+             order by p.%s
+            """.formatted(Db.Product.ID, Db.Product.SKU, Db.Product.NAME, Db.Product.PRICE, QUANTITY,
+                    TABLE,
+                    Db.Product.TABLE, Db.Product.ID, PRODUCT_ID,
+                    CUSTOMER, bind(Params.CUSTOMER),
+                    Db.Product.ID);
 
     private CartSql() {
     }

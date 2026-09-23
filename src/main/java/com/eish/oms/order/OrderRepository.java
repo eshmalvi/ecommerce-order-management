@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import com.eish.oms.common.Params;
 import com.eish.oms.pricing.PriceBreakdown;
 
 /**
@@ -23,13 +24,13 @@ public class OrderRepository {
     /** Creates the order in its first status and returns the new id. */
     public long insert(String customer, OrderStatus status, PriceBreakdown price, String discountCode) {
         return jdbc.sql(OrderSql.INSERT)
-                .param("customer", customer)
-                .param("status", status.name())
-                .param("subtotal", price.subtotal())
-                .param("discountAmount", price.discountAmount())
-                .param("taxAmount", price.taxAmount())
-                .param("total", price.total())
-                .param("discountCode", discountCode)
+                .param(Params.CUSTOMER, customer)
+                .param(Params.STATUS, status.name())
+                .param(Params.SUBTOTAL, price.subtotal())
+                .param(Params.DISCOUNT_AMOUNT, price.discountAmount())
+                .param(Params.TAX_AMOUNT, price.taxAmount())
+                .param(Params.TOTAL, price.total())
+                .param(Params.DISCOUNT_CODE, discountCode)
                 .query(Long.class)
                 .single();
     }
@@ -37,32 +38,32 @@ public class OrderRepository {
     /** Records a successful payment and moves the order to {@code status}. */
     public void confirm(long orderId, OrderStatus status, String paymentRef) {
         jdbc.sql(OrderSql.CONFIRM)
-                .param("id", orderId)
-                .param("status", status.name())
-                .param("paymentRef", paymentRef)
+                .param(Params.ID, orderId)
+                .param(Params.STATUS, status.name())
+                .param(Params.PAYMENT_REF, paymentRef)
                 .update();
     }
 
     /** Records a refund and moves the order to {@code status}. */
     public void markReturned(long orderId, OrderStatus status, String refundRef) {
         jdbc.sql(OrderSql.MARK_RETURNED)
-                .param("id", orderId)
-                .param("status", status.name())
-                .param("refundRef", refundRef)
+                .param(Params.ID, orderId)
+                .param(Params.STATUS, status.name())
+                .param(Params.REFUND_REF, refundRef)
                 .update();
     }
 
     /** Changes the status of an order. Legality is the caller's responsibility (see OrderStateMachine). */
     public void updateStatus(long orderId, OrderStatus status) {
         jdbc.sql(OrderSql.UPDATE_STATUS)
-                .param("id", orderId)
-                .param("status", status.name())
+                .param(Params.ID, orderId)
+                .param(Params.STATUS, status.name())
                 .update();
     }
 
     public Optional<Order> findById(long id) {
         return jdbc.sql(OrderSql.FIND_BY_ID)
-                .param("id", id)
+                .param(Params.ID, id)
                 .query(Order.class)
                 .optional();
     }
@@ -70,8 +71,8 @@ public class OrderRepository {
     /** Finds an order only if it belongs to the customer; a stranger's order looks like it does not exist. */
     public Optional<Order> findByIdAndCustomer(long id, String customer) {
         return jdbc.sql(OrderSql.FIND_BY_ID_AND_CUSTOMER)
-                .param("id", id)
-                .param("customer", customer)
+                .param(Params.ID, id)
+                .param(Params.CUSTOMER, customer)
                 .query(Order.class)
                 .optional();
     }
@@ -82,7 +83,7 @@ public class OrderRepository {
 
     public List<Order> findByCustomer(String customer) {
         return jdbc.sql(OrderSql.FIND_BY_CUSTOMER)
-                .param("customer", customer)
+                .param(Params.CUSTOMER, customer)
                 .query(Order.class)
                 .list();
     }

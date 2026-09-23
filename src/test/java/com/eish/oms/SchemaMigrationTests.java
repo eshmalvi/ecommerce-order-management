@@ -11,6 +11,10 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 
 /**
  * Flyway applies the schema and seed data, and the database enforces the invariants on its own.
+ *
+ * <p>This class deliberately spells table and column names out as literals instead of using {@code Db}:
+ * it checks that the migration created what the application expects, so the two must be written
+ * independently or a rename in both places at once would go unnoticed.
  */
 @SpringBootTest
 class SchemaMigrationTests {

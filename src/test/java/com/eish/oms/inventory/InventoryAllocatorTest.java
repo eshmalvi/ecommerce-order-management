@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.eish.oms.AbstractIntegrationTest;
 import com.eish.oms.Parallel;
+import com.eish.oms.common.Db;
 import com.eish.oms.common.InsufficientStockException;
 
 /**
@@ -88,6 +89,8 @@ class InventoryAllocatorTest extends AbstractIntegrationTest {
     }
 
     private int lowestStockAnywhere() {
-        return jdbc.sql("select min(quantity) from inventory").query(Integer.class).single();
+        return jdbc.sql("select min(%s) from %s".formatted(Db.Inventory.QUANTITY, Db.Inventory.TABLE))
+                .query(Integer.class)
+                .single();
     }
 }

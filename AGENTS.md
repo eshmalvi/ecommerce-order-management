@@ -41,13 +41,20 @@ The full plan is in `docs/plan.md`; the assignment text is in `docs/brief.md`.
   `pipeline`, plus `config` and `common`.
 - Controllers translate HTTP to service calls and back, nothing else. Services own use cases and
   transaction boundaries. Repositories own data access, one class per table.
-- No magic strings. Anything the system depends on as an identifier is a named constant: SQL statements
-  in a package-private `XxxSql` class next to each repository (`ProductSql.FIND_BY_ID`); URL paths in
+- No magic strings. Anything the system depends on as an identifier is a named constant: URL paths in
   `config/ApiPaths` (used by both controllers and `SecurityConfig`, so they cannot drift); roles in
   `config/Roles`; profile names in `config/Profiles`; demo credentials in `config/DemoUsers`; seed
-  identifiers for tests in `SeedData`. What stays inline: one-off human-readable message text, SQL parameter
-  names (they belong to the statement that declares them), validation annotation values, and test inputs
-  such as request JSON.
+  identifiers for tests in `SeedData`. What stays inline: one-off human-readable message text, validation
+  annotation values, and test inputs such as request JSON.
+- SQL is built from a shared vocabulary, not written as literals. Table and column names live in
+  `common/Db` (nested per table: `Db.Inventory.QUANTITY`, `Db.Inventory.COLUMNS`); named-parameter names in
+  `common/Params`, used both inside the statement via `Params.bind(...)` and in `.param(...)` when binding,
+  so the two sides cannot disagree. Each repository's statements are assembled in its package-private
+  `XxxSql` class with `"...".formatted(...)` on a text block, so the statement shape stays readable.
+  SQL grammar (`select`, `from`, `where`, `on conflict`) stays literal on purpose: it never gets renamed,
+  and extracting it would only hide the statement. `SchemaMigrationTests` deliberately keeps literal table
+  names, because it verifies the migration against what the application expects and must not share a
+  source of truth with it.
 - One `@RestControllerAdvice` returns RFC 7807 `ProblemDetail` for every error. Status codes:
   400 validation, 401 no credentials, 402 payment declined, 403 wrong role, 404 not found or not yours,
   409 conflict with current state (duplicate, insufficient stock, illegal transition, empty cart).
@@ -109,6 +116,11 @@ One row per commit. Status is updated by the agent when the commit lands.
 - Review of commit 5 asked for SQL and shared literals to move into constants classes, then for a
   sweep of the whole codebase (embedded database credentials, profile names, URL paths, seed data in
   tests). Done as one `refactor` commit so the review is visible in the history.
+- After commit 17 the human asked for the SQL to stop repeating table, column and parameter names.
+  Done as a `refactor` commit introducing `Db` and `Params`; the generated statements were diffed against
+  the previous literals (identical apart from explicit aliases) and the end-to-end walkthrough re-run.
+- Stale `target/classes` written by the IDE's Eclipse compiler once made Maven report "Unresolved
+  compilation problems" at test time for a class that did exist. `./mvnw clean verify` fixes it.
 - Rare flake: embedded PostgreSQL picks a random port, and once another process grabbed it in the same
   instant ("could not bind IPv4 address 127.0.0.1"), so the readiness probe timed out and the whole
   test context failed. Re-running the build fixed it. If it recurs often, pin a port in

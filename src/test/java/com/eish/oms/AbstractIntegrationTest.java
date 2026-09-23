@@ -1,5 +1,6 @@
 package com.eish.oms;
 
+import static com.eish.oms.common.Params.bind;
 import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 
@@ -14,7 +15,10 @@ import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
+import com.eish.oms.common.Db;
+import com.eish.oms.common.Params;
 import com.eish.oms.config.DemoUsers;
+import com.eish.oms.order.AuditType;
 
 /**
  * Base for integration tests: full application context on the embedded PostgreSQL, MockMvc for HTTP,
@@ -22,11 +26,16 @@ import com.eish.oms.config.DemoUsers;
  *
  * <p>Deliberately not {@code @Transactional}: the tests exercise real commits, concurrent transactions
  * and after-commit listeners, all of which a test-managed transaction would hide.
+ *
+ * <p>The query helpers below read the database directly, using the same {@link Db} vocabulary as the
+ * application, so a schema rename breaks them at compile time rather than at run time.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Sql({"/reset.sql", "/seed.sql"})
 public abstract class AbstractIntegrationTest {
+
+    private static final String WAREHOUSE_PARAM = "warehouse";
 
     @Autowired
     protected MockMvc mockMvc;
@@ -43,26 +52,7 @@ public abstract class AbstractIntegrationTest {
         await().atMost(Duration.ofSeconds(10)).until(() -> notificationRows() == paidOrders());
     }
 
-    protected int paidOrders() {
-        return jdbc.sql("select count(*) from orders where payment_ref is not null").query(Integer.class).single();
-    }
-
-    protected int notificationRows() {
-        return jdbc.sql("select count(*) from audit_log where type = 'NOTIFICATION'").query(Integer.class).single();
-    }
-
-    protected int auditRows(String type) {
-        return jdbc.sql("select count(*) from audit_log where type = :type").param("type", type)
-                .query(Integer.class).single();
-    }
-
-    protected int orderCount() {
-        return jdbc.sql("select count(*) from orders").query(Integer.class).single();
-    }
-
-    protected int cartRows() {
-        return jdbc.sql("select count(*) from cart_item").query(Integer.class).single();
-    }
+    // ---- credentials ----
 
     protected static RequestPostProcessor asAdmin() {
         return httpBasic(DemoUsers.ADMIN_USERNAME, DemoUsers.ADMIN_PASSWORD);
@@ -76,38 +66,94 @@ public abstract class AbstractIntegrationTest {
         return httpBasic(DemoUsers.STAFF_USERNAME, DemoUsers.STAFF_PASSWORD);
     }
 
+    // ---- row counts ----
+
+    protected int orderCount() {
+        return count(Db.Orders.TABLE);
+    }
+
+    protected int paidOrders() {
+        return count(Db.Orders.TABLE, Db.Orders.PAYMENT_REF + " is not null");
+    }
+
+    protected int cartRows() {
+        return count(Db.CartItem.TABLE);
+    }
+
+    protected int notificationRows() {
+        return auditRows(AuditType.NOTIFICATION);
+    }
+
+    protected int auditRows(AuditType type) {
+        return jdbc.sql("select count(*) from %s where %s = %s"
+                        .formatted(Db.AuditLog.TABLE, Db.AuditLog.TYPE, bind(Params.TYPE)))
+                .param(Params.TYPE, type.name())
+                .query(Integer.class)
+                .single();
+    }
+
+    private int count(String table) {
+        return jdbc.sql("select count(*) from " + table).query(Integer.class).single();
+    }
+
+    private int count(String table, String whereClause) {
+        return jdbc.sql("select count(*) from %s where %s".formatted(table, whereClause))
+                .query(Integer.class)
+                .single();
+    }
+
+    // ---- seed lookups ----
+
     protected long productId(String sku) {
-        return jdbc.sql("select id from product where sku = :sku").param("sku", sku).query(Long.class).single();
+        return idWhere(Db.Product.TABLE, Db.Product.ID, Db.Product.SKU, Params.SKU, sku);
     }
 
     protected long categoryId(String name) {
-        return jdbc.sql("select id from category where name = :name").param("name", name).query(Long.class).single();
+        return idWhere(Db.Category.TABLE, Db.Category.ID, Db.Category.NAME, Params.NAME, name);
     }
 
     protected long warehouseId(String name) {
-        return jdbc.sql("select id from warehouse where name = :name").param("name", name).query(Long.class).single();
+        return idWhere(Db.Warehouse.TABLE, Db.Warehouse.ID, Db.Warehouse.NAME, Params.NAME, name);
     }
+
+    private long idWhere(String table, String idColumn, String column, String param, String value) {
+        return jdbc.sql("select %s from %s where %s = %s".formatted(idColumn, table, column, bind(param)))
+                .param(param, value)
+                .query(Long.class)
+                .single();
+    }
+
+    // ---- stock ----
 
     protected int totalStock(String sku) {
         return jdbc.sql("""
-                select coalesce(sum(i.quantity), 0) from inventory i
-                join product p on p.id = i.product_id
-                where p.sku = :sku
-                """)
-                .param("sku", sku)
+                select coalesce(sum(i.%s), 0)
+                  from %s i
+                  join %s p on p.%s = i.%s
+                 where p.%s = %s
+                """.formatted(Db.Inventory.QUANTITY,
+                        Db.Inventory.TABLE,
+                        Db.Product.TABLE, Db.Product.ID, Db.Inventory.PRODUCT_ID,
+                        Db.Product.SKU, bind(Params.SKU)))
+                .param(Params.SKU, sku)
                 .query(Integer.class)
                 .single();
     }
 
     protected int stock(String sku, String warehouse) {
         return jdbc.sql("""
-                select i.quantity from inventory i
-                join product p on p.id = i.product_id
-                join warehouse w on w.id = i.warehouse_id
-                where p.sku = :sku and w.name = :warehouse
-                """)
-                .param("sku", sku)
-                .param("warehouse", warehouse)
+                select i.%s
+                  from %s i
+                  join %s p on p.%s = i.%s
+                  join %s w on w.%s = i.%s
+                 where p.%s = %s and w.%s = %s
+                """.formatted(Db.Inventory.QUANTITY,
+                        Db.Inventory.TABLE,
+                        Db.Product.TABLE, Db.Product.ID, Db.Inventory.PRODUCT_ID,
+                        Db.Warehouse.TABLE, Db.Warehouse.ID, Db.Inventory.WAREHOUSE_ID,
+                        Db.Product.SKU, bind(Params.SKU), Db.Warehouse.NAME, bind(WAREHOUSE_PARAM)))
+                .param(Params.SKU, sku)
+                .param(WAREHOUSE_PARAM, warehouse)
                 .query(Integer.class)
                 .single();
     }

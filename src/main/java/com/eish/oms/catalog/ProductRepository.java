@@ -7,6 +7,8 @@ import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import com.eish.oms.common.Params;
+
 /**
  * Data access for the {@code product} table. The SQL lives in {@link ProductSql}.
  */
@@ -22,10 +24,10 @@ public class ProductRepository {
     /** Inserts a product and returns it with its generated id. Duplicate SKUs fail on the unique constraint. */
     public Product insert(String sku, String name, BigDecimal price, long categoryId) {
         Long id = jdbc.sql(ProductSql.INSERT)
-                .param("sku", sku)
-                .param("name", name)
-                .param("price", price)
-                .param("categoryId", categoryId)
+                .param(Params.SKU, sku)
+                .param(Params.NAME, name)
+                .param(Params.PRICE, price)
+                .param(Params.CATEGORY_ID, categoryId)
                 .query(Long.class)
                 .single();
         return new Product(id, sku, name, price, categoryId);
@@ -37,21 +39,21 @@ public class ProductRepository {
 
     public List<Product> findByCategory(long categoryId) {
         return jdbc.sql(ProductSql.FIND_BY_CATEGORY)
-                .param("categoryId", categoryId)
+                .param(Params.CATEGORY_ID, categoryId)
                 .query(Product.class)
                 .list();
     }
 
     public Optional<Product> findById(long id) {
         return jdbc.sql(ProductSql.FIND_BY_ID)
-                .param("id", id)
+                .param(Params.ID, id)
                 .query(Product.class)
                 .optional();
     }
 
     public Optional<Product> findBySku(String sku) {
         return jdbc.sql(ProductSql.FIND_BY_SKU)
-                .param("sku", sku)
+                .param(Params.SKU, sku)
                 .query(Product.class)
                 .optional();
     }

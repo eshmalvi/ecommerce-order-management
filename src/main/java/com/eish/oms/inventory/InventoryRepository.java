@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import com.eish.oms.common.Params;
+
 /**
  * Data access for the {@code inventory} table. The SQL lives in {@link InventorySql}.
  */
@@ -24,9 +26,9 @@ public class InventoryRepository {
      */
     public Inventory upsert(long productId, long warehouseId, int quantity) {
         return jdbc.sql(InventorySql.UPSERT)
-                .param("productId", productId)
-                .param("warehouseId", warehouseId)
-                .param("quantity", quantity)
+                .param(Params.PRODUCT_ID, productId)
+                .param(Params.WAREHOUSE_ID, warehouseId)
+                .param(Params.QUANTITY, quantity)
                 .query(Inventory.class)
                 .single();
     }
@@ -34,8 +36,8 @@ public class InventoryRepository {
     /** Ids of the warehouses that currently hold at least {@code quantity} of the product, fullest first. */
     public List<Long> findWarehousesWithStock(long productId, int quantity) {
         return jdbc.sql(InventorySql.WAREHOUSES_WITH_STOCK)
-                .param("productId", productId)
-                .param("quantity", quantity)
+                .param(Params.PRODUCT_ID, productId)
+                .param(Params.QUANTITY, quantity)
                 .query(Long.class)
                 .list();
     }
@@ -49,9 +51,9 @@ public class InventoryRepository {
      */
     public boolean tryDecrement(long productId, long warehouseId, int quantity) {
         int updatedRows = jdbc.sql(InventorySql.TRY_DECREMENT)
-                .param("productId", productId)
-                .param("warehouseId", warehouseId)
-                .param("quantity", quantity)
+                .param(Params.PRODUCT_ID, productId)
+                .param(Params.WAREHOUSE_ID, warehouseId)
+                .param(Params.QUANTITY, quantity)
                 .update();
         return updatedRows == 1;
     }
@@ -59,9 +61,9 @@ public class InventoryRepository {
     /** Adds {@code quantity} units back to the warehouse they were taken from. */
     public void restock(long productId, long warehouseId, int quantity) {
         jdbc.sql(InventorySql.RESTOCK)
-                .param("productId", productId)
-                .param("warehouseId", warehouseId)
-                .param("quantity", quantity)
+                .param(Params.PRODUCT_ID, productId)
+                .param(Params.WAREHOUSE_ID, warehouseId)
+                .param(Params.QUANTITY, quantity)
                 .update();
     }
 
@@ -71,15 +73,15 @@ public class InventoryRepository {
 
     public List<Inventory> findByProduct(long productId) {
         return jdbc.sql(InventorySql.FIND_BY_PRODUCT)
-                .param("productId", productId)
+                .param(Params.PRODUCT_ID, productId)
                 .query(Inventory.class)
                 .list();
     }
 
     public Optional<Inventory> find(long productId, long warehouseId) {
         return jdbc.sql(InventorySql.FIND_BY_PRODUCT_AND_WAREHOUSE)
-                .param("productId", productId)
-                .param("warehouseId", warehouseId)
+                .param(Params.PRODUCT_ID, productId)
+                .param(Params.WAREHOUSE_ID, warehouseId)
                 .query(Inventory.class)
                 .optional();
     }

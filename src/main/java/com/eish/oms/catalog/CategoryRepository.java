@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import com.eish.oms.common.Params;
+
 /**
  * Data access for the {@code category} table. The SQL lives in {@link CategorySql}.
  */
@@ -21,7 +23,7 @@ public class CategoryRepository {
     /** Inserts a category and returns it with its generated id. Duplicate names fail on the unique constraint. */
     public Category insert(String name) {
         Long id = jdbc.sql(CategorySql.INSERT)
-                .param("name", name)
+                .param(Params.NAME, name)
                 .query(Long.class)
                 .single();
         return new Category(id, name);
@@ -33,7 +35,7 @@ public class CategoryRepository {
 
     public Optional<Category> findById(long id) {
         return jdbc.sql(CategorySql.FIND_BY_ID)
-                .param("id", id)
+                .param(Params.ID, id)
                 .query(Category.class)
                 .optional();
     }
