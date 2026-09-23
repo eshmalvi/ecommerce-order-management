@@ -15,7 +15,7 @@ Three requirements from the brief were treated as the core and are provably corr
 3. **The downstream pipeline does not block the checkout response.** Fulfillment routing, customer
    notification and audit logging run as after-commit, asynchronous listeners on a bounded pool.
 
-**Demo video:** _link to be added_
+*Demo video:* - https://drive.google.com/file/d/1gA-n65L5gom_vvXC7e0GTJWKG0dyz6uE/view?usp=drive_link
 
 ## Run it
 
