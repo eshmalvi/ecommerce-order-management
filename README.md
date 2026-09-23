@@ -97,6 +97,154 @@ The full design, requirements, assumptions, component walkthrough and the list o
 scoping cuts are in [`docs/plan.md`](docs/plan.md). The assignment as received is in
 [`docs/brief.md`](docs/brief.md).
 
+### Class diagram
+
+`CheckoutService` is the orchestrator: it owns the transaction and delegates allocation, pricing, payment
+and legality checks to the components that own those concerns.
+
+```mermaid
+classDiagram
+    class OrderStatus {
+        <<enumeration>>
+        PLACED
+        CONFIRMED
+        PACKED
+        SHIPPED
+        DELIVERED
+        RETURNED
+    }
+    class AuditType {
+        <<enumeration>>
+        STATUS
+        ROUTING
+        NOTIFICATION
+        AUDIT
+    }
+    class PaymentGateway {
+        <<interface>>
+        +charge(amount, cardNumber) String
+        +refund(paymentRef, amount) String
+    }
+    class FakePaymentGateway {
+        +DECLINED_SUFFIX = "0002"
+    }
+    class OrderStateMachine {
+        -ALLOWED Map~OrderStatus, Set~
+        +allowedTransitions(from) Set
+        +canTransition(from, to) boolean
+        +assertCanTransition(from, to)
+    }
+    class InventoryAllocator {
+        +allocate(productId, quantity) long
+    }
+    class InventoryRepository {
+        +findWarehousesWithStock(productId, qty) List
+        +tryDecrement(productId, warehouseId, qty) boolean
+        +restock(productId, warehouseId, qty)
+        +upsert(productId, warehouseId, qty) Inventory
+    }
+    class PricingService {
+        -taxRate BigDecimal
+        +price(lines, percentOff) PriceBreakdown
+    }
+    class CheckoutService {
+        +checkout(customer, request) OrderResponse
+    }
+    class FulfillmentService {
+        -STAFF_TARGETS Set
+        +updateStatus(orderId, target) OrderResponse
+    }
+    class ReturnService {
+        +returnOrder(customer, orderId) OrderResponse
+    }
+    class OrderService {
+        +getOrder(id) OrderResponse
+        +getOrderForCustomer(customer, id) OrderResponse
+    }
+    class OrderPlacedEvent {
+        <<record>>
+        orderId, customer, total, warehouseIds
+    }
+    class RoutingListener
+    class NotificationListener
+    class AuditListener
+    class ApiExceptionHandler {
+        +handle*(exception) ProblemDetail
+    }
+
+    PaymentGateway <|.. FakePaymentGateway
+    CheckoutService --> InventoryAllocator : allocates lines
+    CheckoutService --> PricingService : prices cart
+    CheckoutService --> PaymentGateway : charges
+    CheckoutService --> OrderStateMachine : PLACED to CONFIRMED
+    CheckoutService --> OrderPlacedEvent : publishes after commit
+    InventoryAllocator --> InventoryRepository : tryDecrement
+    FulfillmentService --> OrderStateMachine : legal moves
+    ReturnService --> OrderStateMachine : DELIVERED to RETURNED
+    ReturnService --> PaymentGateway : refunds
+    ReturnService --> InventoryRepository : restocks
+    OrderPlacedEvent <.. RoutingListener : AFTER_COMMIT
+    OrderPlacedEvent <.. NotificationListener : AFTER_COMMIT
+    OrderPlacedEvent <.. AuditListener : AFTER_COMMIT
+    OrderStateMachine --> OrderStatus
+```
+
+### Checkout sequence
+
+Everything between "cart lines" and "commit" is one database transaction. The customer's response goes
+out on commit; the three listeners run afterwards on their own thread pool.
+
+```mermaid
+sequenceDiagram
+    participant C as Customer
+    participant SEC as Security
+    participant CS as CheckoutService (one tx)
+    participant IA as InventoryAllocator
+    participant PG as PaymentGateway
+    participant DB as PostgreSQL
+    participant L as Listeners (pipeline pool)
+
+    C->>SEC: POST /api/checkout (Basic auth)
+    SEC->>CS: role CUSTOMER ok
+    CS->>DB: cart lines ordered by product id
+    CS->>CS: price
+    CS->>DB: insert order PLACED
+    CS->>IA: allocate(line)
+    IA->>DB: UPDATE ... WHERE quantity >= q
+    DB-->>IA: 1 row
+    CS->>DB: insert order_line, audit PLACED
+    CS->>PG: charge(total, card)
+    PG-->>CS: pay_ref (or PaymentDeclinedException → rollback → 402)
+    CS->>DB: CONFIRMED + pay_ref, audit CONFIRMED, clear cart
+    CS->>DB: commit
+    CS-->>C: 201 order (history: PLACED, CONFIRMED)
+    DB-->>L: OrderPlacedEvent delivered after commit
+    L->>DB: ROUTING, NOTIFICATION, AUDIT rows
+```
+
+### Checkout decision flow
+
+Every branch to the right of a failure ends in a rollback, so a failed checkout leaves no order, no
+missing stock and a full cart.
+
+```mermaid
+flowchart TD
+    A[POST /api/checkout] --> B{cart empty?}
+    B -- yes --> R1[409 Cart is empty]
+    B -- no --> C[price: subtotal, discount, tax, total]
+    C --> D[insert order PLACED]
+    D --> E[for each line: allocate + insert order_line]
+    E --> F{stock found?}
+    F -- no --> R2[409 InsufficientStock, rollback]
+    F -- yes --> G[charge card]
+    G --> H{approved?}
+    H -- no --> R3[402 declined, rollback]
+    H -- yes --> I[CONFIRMED + payment_ref, clear cart]
+    I --> J[commit]
+    J --> K[201 to customer]
+    J -.-> L[OrderPlacedEvent → 3 async listeners]
+```
+
 ## Assumptions
 
 - Single process, embedded database, no message brokers, per the brief's out-of-scope list.
